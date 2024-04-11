@@ -16,37 +16,35 @@ type Cell struct {
 }
 
 func parseCoordinates(input string, MaxX, MaxY *int) map[Cell]bool {
+	// Prepare the mapping of live cells
 	liveCells := make(map[Cell]bool)
+
+	// Expect input like `x1 y1, x2 y2, x3 y3`. Thus, split first
+	// on comma and parse one by one afterwards.
 	parts := strings.Split(input, ",")
 	for _, part := range parts {
 		coords := strings.Fields(strings.TrimSpace(part))
 		if len(coords) != 2 {
 			continue
 		}
+		// Try parsing the string coordinate to integer
 		x, err1 := strconv.Atoi(coords[0])
 		y, err2 := strconv.Atoi(coords[1])
+
+		// Verify that there's no error and coordinates within boundaries
 		if err1 != nil || err2 != nil || x < 1 || x > *MaxX || y < 1 || y > *MaxY {
 			continue
 		}
+
+		// If all's good add the live Cell to the map
 		liveCells[Cell{X: x, Y: y}] = true
 	}
 	return liveCells
 }
 
-func areMapsEqual(a, b map[Cell]bool) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k := range a {
-		if !b[k] {
-			return false
-		}
-	}
-	return true
-}
-
 func readInitialCoordinates(MaxX, MaxY *int) map[Cell]bool {
-	coordsFlag := flag.String("c", "", "Initial live cells coordinates (e.g., -c \"1 3, 3 4\")")
+	coordsFlag := flag.String(
+		"c", "", "Initial live cells coordinates (e.g., -c \"1 3, 3 4\")")
 	flag.Parse()
 
 	// Command line coordinates provided
@@ -67,22 +65,44 @@ func readInitialCoordinates(MaxX, MaxY *int) map[Cell]bool {
 
 	// Interactive mode: prompt for input
 	fmt.Printf(
-		"Enter live cell coordinates (x y), press Enter twice to start. Max X=%d, Max Y=%d:",
+		"Enter live cell coordinates (x y), and then press Enter twice to start. Max X=%d, Max Y=%d:",
 		MaxX, MaxY)
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan() // Read the first line of input
 	return parseCoordinates(scanner.Text(), MaxX, MaxY)
 }
 
-func updateCells(liveCells map[Cell]bool, MaxX, MaxY *int) (map[Cell]bool, bool, bool) {
+func printBoard(liveCells map[Cell]bool, MaxX, MaxY *int) {
+	fmt.Print("\033[H\033[2J\033[3J")
+	for y := 1; y <= *MaxY; y++ {
+		for x := 1; x <= *MaxX; x++ {
+			if liveCells[Cell{X: x, Y: y}] {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
+		}
+		// If we change y, we change line
+		fmt.Println()
+	}
+}
+
+func updateCells(liveCells map[Cell]bool, MaxX, MaxY *int) (
+	map[Cell]bool, bool, bool,
+) {
+	NeighborOffsets := []Cell{
+		{0, 1},   // North
+		{1, 1},   // Northeast
+		{1, 0},   // East
+		{1, -1},  // Southeast
+		{0, -1},  // South
+		{-1, -1}, // Southwest
+		{-1, 0},  // West
+		{-1, 1},  // Northwest
+	}
+
 	nextGen := make(map[Cell]bool)
 	candidateCells := make(map[Cell]int)
-
-	var NeighborOffsets = []Cell{
-		{-1, -1}, {-1, 0}, {-1, 1},
-		{0, -1}, {0, 1},
-		{1, -1}, {1, 0}, {1, 1},
-	}
 
 	for cell := range liveCells {
 		neighborsCount := 0
@@ -115,24 +135,24 @@ func updateCells(liveCells map[Cell]bool, MaxX, MaxY *int) (map[Cell]bool, bool,
 		}
 	}
 
-	// Check for changes between generations
+	// Check if the world has become stagnant between generations.
+	// This determines if the game should continue.
 	changed := !areMapsEqual(liveCells, nextGen)
 
 	return nextGen, anyWithinBoundaries, changed
 }
 
-func printBoard(liveCells map[Cell]bool, MaxX, MaxY *int) {
-	fmt.Print("\033[H\033[2J\033[3J")
-	for y := 1; y <= *MaxY; y++ {
-		for x := 1; x <= *MaxX; x++ {
-			if liveCells[Cell{X: x, Y: y}] {
-				fmt.Print("#")
-			} else {
-				fmt.Print(".")
-			}
-		}
-		fmt.Println()
+// Helper function to check if two Cell maps are equal.
+func areMapsEqual(a, b map[Cell]bool) bool {
+	if len(a) != len(b) {
+		return false
 	}
+	for k := range a {
+		if !b[k] {
+			return false
+		}
+	}
+	return true
 }
 
 func main() {
@@ -145,9 +165,11 @@ func main() {
 		printBoard(liveCells, &MaxX, &MaxY)
 		liveCells, anyWithinBoundaries, changed = updateCells(liveCells, &MaxX, &MaxY)
 
+		// Pause the time a bit for visibility
+		time.Sleep(250 * time.Millisecond)
+
 		// If there are no more changes or no live cells within the boundaries, stop the game.
 		if !changed || !anyWithinBoundaries {
-			time.Sleep(250 * time.Millisecond)
 			printBoard(liveCells, &MaxX, &MaxY)
 			if !changed {
 				fmt.Println("No more changes, stopping the game.")
@@ -156,8 +178,5 @@ func main() {
 			}
 			break
 		}
-
-		// Wait a bit before the next iteration.
-		time.Sleep(250 * time.Millisecond)
 	}
 }
