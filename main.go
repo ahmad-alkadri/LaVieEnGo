@@ -159,9 +159,12 @@ func main() {
 	MaxX, MaxY := 60, 20
 
 	liveCells := readInitialCoordinates(&MaxX, &MaxY)
+	printBoard(liveCells, &MaxX, &MaxY)
 	var changed, anyWithinBoundaries bool
 
 	for {
+		// Wait a bit before printing
+		time.Sleep(250 * time.Millisecond)
 		printBoard(liveCells, &MaxX, &MaxY)
 		liveCells, anyWithinBoundaries, changed = updateCells(liveCells, &MaxX, &MaxY)
 
