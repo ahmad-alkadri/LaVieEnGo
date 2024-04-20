@@ -7,6 +7,7 @@
 
 - **Terminal-Based Visualization**: Watch the evolution of cells directly in your terminal.
 - **Custom Initial Configurations**: Input your starting configurations to explore different patterns and behaviors.
+- **User Control**: Pause the game and move forward step by step for more detailed observation of the cells' evolution. Resume the automatic evolution afterwards.
 - **Stop Condition**: The game halts automatically when it detects no further changes or no life within the visible area, allowing for finite observation of the game.
 
 ## Getting Started
