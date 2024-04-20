@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func PrintBoard(liveCells map[model.Cell]bool, MaxX, MaxY *int) {
+func printBoard(liveCells map[model.Cell]bool, MaxX, MaxY *int) {
 	fmt.Print("\033[H\033[2J\033[3J")
 	for y := 1; y <= *MaxY; y++ {
 		for x := 1; x <= *MaxX; x++ {

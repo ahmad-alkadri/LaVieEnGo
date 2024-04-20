@@ -6,12 +6,25 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-func KeyboardWatch(keyErrorChan chan error, controlChan chan bool, exitChan chan bool) {
+func Controller(
+	keyErrorChan chan error,
+	controlChan chan bool,
+	exitChan chan bool,
+	stepChan chan bool,
+) {
 	for {
 		char, key, err := keyboard.GetKey()
 		if err != nil {
 			keyErrorChan <- err
 			return
+		}
+
+		if key == keyboard.KeySpace {
+			controlChan <- true // Toggle pause/resume
+		}
+
+		if key == keyboard.KeyArrowRight {
+			stepChan <- true // Move forward one step
 		}
 
 		if char == 'p' || char == 'P' {

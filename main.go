@@ -22,15 +22,16 @@ func main() {
 	}()
 
 	controlChan := make(chan bool)
+	stepChan := make(chan bool)
 	exitChan := make(chan bool)
 	gameOverChan := make(chan bool)
 	keyErrorChan := make(chan error)
 
 	// Goroutine for the game
-	go app.Game(initialCells, controlChan, exitChan, gameOverChan, &MaxX, &MaxY)
+	go app.Game(initialCells, controlChan, exitChan, gameOverChan, stepChan, &MaxX, &MaxY)
 
 	// Goroutine to read keyboard inputs
-	go app.KeyboardWatch(keyErrorChan, controlChan, exitChan)
+	go app.Controller(keyErrorChan, controlChan, exitChan, stepChan)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt) // Listen for Ctrl+C signal
