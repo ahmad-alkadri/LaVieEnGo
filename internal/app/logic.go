@@ -3,21 +3,26 @@ package app
 import (
 	model "LaVieEnGo/internal/model"
 	"fmt"
+	"strings"
 )
 
 func printBoard(liveCells map[model.Cell]bool, MaxX, MaxY *int) {
+	// Clear all characters on screen
 	fmt.Print("\033[H\033[2J\033[3J")
+	var buffer strings.Builder
+
 	for y := 1; y <= *MaxY; y++ {
 		for x := 1; x <= *MaxX; x++ {
 			if liveCells[model.Cell{X: x, Y: y}] {
-				fmt.Print("#")
+				buffer.WriteRune('#')
 			} else {
-				fmt.Print(".")
+				buffer.WriteRune(' ')
 			}
 		}
-		// If we change y, we change line
-		fmt.Println()
+		buffer.WriteRune('\n')
 	}
+
+	fmt.Print(buffer.String())
 }
 
 func UpdateCells(liveCells map[model.Cell]bool, MaxX, MaxY *int) (
